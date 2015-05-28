@@ -29,9 +29,8 @@ class ChatViewModel: NSObject {
         }
     }
     
-    func bubbleImageViewForMessageAtIndex(index: Int) -> JSQMessagesBubbleImage {
-        assert(messages.count > index)
-        return messages[index].senderID == self.currentUserID ? outgoingBubbleImageView : incomingBubbleImageView
+    func bubbleImageViewForMessage(message: QBChatMessage) -> JSQMessagesBubbleImage {
+        return message.senderID == ServicesManager.instance.currentUser().ID ? outgoingBubbleImageView : incomingBubbleImageView
     }
     
     func loadMoreMessages() {
