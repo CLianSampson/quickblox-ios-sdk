@@ -33,12 +33,18 @@ class ChatViewController: JSQMessagesViewController, QBChatDelegate {
 //        self.chatViewModel = ChatViewModel(currentUserID: ServicesManager.instance.currentUser()!.ID, dialog: dialog!)
 		
 //        self.startMessagesObserver()
+        
         if dialog?.chatRoom == nil {
+            
             self.navigationItem.rightBarButtonItem = nil // remove "info" button
+            
         }
 		else {
-			ConnectionManager.instance.joinAllRooms()
-//			ConnectionManager.instance.currentChatViewModel = self.chatViewModel
+            
+            if dialog?.chatRoom.isJoined {
+                dialog?.chatRoom.joinRoomWithHistoryAttribute(["maxstanzas":0])
+            }
+            
 		}
 //        QBChat.instance().addDelegate(self)
         
