@@ -34,16 +34,16 @@ class ChatViewController: JSQMessagesViewController, QBChatDelegate {
 		
 //        self.startMessagesObserver()
         
-        if dialog?.chatRoom == nil {
+        if let chatRoom = dialog?.chatRoom {
             
-            self.navigationItem.rightBarButtonItem = nil // remove "info" button
+            if !chatRoom.isJoined {
+                chatRoom.joinRoomWithHistoryAttribute(["maxstanzas":0])
+            }
             
         }
 		else {
             
-            if dialog?.chatRoom.isJoined {
-                dialog?.chatRoom.joinRoomWithHistoryAttribute(["maxstanzas":0])
-            }
+            self.navigationItem.rightBarButtonItem = nil // remove "info" button
             
 		}
 //        QBChat.instance().addDelegate(self)
