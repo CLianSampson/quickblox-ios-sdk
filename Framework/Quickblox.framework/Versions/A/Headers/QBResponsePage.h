@@ -18,4 +18,6 @@
 
 + (QBResponsePage *)responsePageForLastRecord;
 
++ (QBResponsePage *)responsePageWithLimit:(NSInteger)limit skip:(NSInteger)skip totalEntries:(NSUInteger)totalEntries;
+
 @end

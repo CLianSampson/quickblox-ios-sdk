@@ -12,6 +12,7 @@ class DialogsViewController: UIViewController, UITableViewDelegate, QMChatServic
     @IBOutlet weak var tableView:UITableView!
     
     private var delegate : SwipeableTableViewCellWithBlockButtons!
+    private var didEnterBackgroundDate: NSDate?
     
     @IBAction private func goToOpponents(sender: AnyObject?){
         self.performSegueWithIdentifier("SA_STR_SEGUE_GO_TO_SELECT_OPPONENTS".localized, sender: nil)
@@ -28,12 +29,18 @@ class DialogsViewController: UIViewController, UITableViewDelegate, QMChatServic
 
         ServicesManager.instance.chatService.addDelegate(self)
         ServicesManager.instance.chatService.addDelegate(ServicesManager.instance)
+        
+        NSNotificationCenter.defaultCenter().addObserverForName(UIApplicationDidBecomeActiveNotification, object: nil, queue: NSOperationQueue.mainQueue()) { (notification: NSNotification!) -> Void in
             
-        self.getDialogs()
+            self.getLastUpdatedDialogs()
+        }
+        
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "didEnterBackgroundNotification", name: UIApplicationDidEnterBackgroundNotification, object: nil)
     }
     
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
+        self.getDialogs(nil)
     }
     
     override func viewWillDisappear(animated: Bool) {
@@ -41,6 +48,8 @@ class DialogsViewController: UIViewController, UITableViewDelegate, QMChatServic
         
         if self.isMovingFromParentViewController() {
             ServicesManager.instance.chatService.logoutChat()
+            NSNotificationCenter.defaultCenter().removeObserver(self)
+            ServicesManager.instance.chatService.removeDelegate(self)
         }
     }
     
@@ -52,9 +61,15 @@ class DialogsViewController: UIViewController, UITableViewDelegate, QMChatServic
         }
     }
     
+    // MARK: - Notification handling
+    
+    func didEnterBackgroundNotification() {
+        self.didEnterBackgroundDate = NSDate()
+    }
+    
     // MARK: - DataSource Action
     
-    func getDialogs() {
+    func getDialogs(extendedRequest: Dictionary<String, AnyObject>?) {
         
         var shouldShowSuccessStatus = false
         
@@ -63,7 +78,7 @@ class DialogsViewController: UIViewController, UITableViewDelegate, QMChatServic
             SVProgressHUD.showWithStatus("SA_STR_LOADING".localized, maskType: SVProgressHUDMaskType.Clear)
         }
         
-        ServicesManager.instance.chatService.allDialogsWithPageLimit(kDialogsPageLimit, interationBlock: { (response: QBResponse!, dialogObjects: [AnyObject]!, dialogsUsersIDs: Set<NSObject>!, stop: UnsafeMutablePointer<ObjCBool>) -> Void in
+        ServicesManager.instance.chatService.allDialogsWithPageLimit(kDialogsPageLimit, extendedRequest:extendedRequest, interationBlock: { (response: QBResponse!, dialogObjects: [AnyObject]!, dialogsUsersIDs: Set<NSObject>!, stop: UnsafeMutablePointer<ObjCBool>) -> Void in
 
         }) { (response: QBResponse!) -> Void in
             
@@ -81,6 +96,24 @@ class DialogsViewController: UIViewController, UITableViewDelegate, QMChatServic
             }
         }
     }
+    
+    func getLastUpdatedDialogs() {
+        
+        if let didEnterBackgroundDate = self.didEnterBackgroundDate {
+            
+            let extendedRequest = ["last_message_date_sent[gte]" : didEnterBackgroundDate.timeIntervalSince1970]
+    
+            self.getDialogs(extendedRequest)
+            
+        } else {
+            
+            self.getDialogs(nil)
+            
+        }
+        
+    }
+    
+    
     
     // MARK: - DataSource
     
